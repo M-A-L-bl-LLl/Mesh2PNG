@@ -12,5 +12,8 @@
     "transparent",
     "editor-tool"
   ],
+  "author": {
+    "name": "Losev Denis"
+  },
   "dependencies": {}
 }
