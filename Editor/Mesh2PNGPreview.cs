@@ -95,21 +95,21 @@ namespace Tools.Mesh2PNG
 
         // Lighting
 
-        // Call before BeginPreview. Sets light components read by SetCustomLighting.
+        // Call before BeginPreview. Configures lights and Built-in ambient.
         public void ApplyLights(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
 
-            _utility.ambientColor = lighting.ambient; // built-in pipeline fallback
+            _utility.ambientColor = lighting.ambient; // Built-in reads this before BeginPreview
             if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
             if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
         }
 
-        // Call after BeginPreview. At that point RenderSettings points to the preview
-        // scene because SetOverrideLightingSettings just ran, so URP reads this.
+        // Call after BeginPreview. URP reads RenderSettings after SetOverrideLightingSettings runs.
+        // Built-in uses _utility.ambientColor set above, so nothing extra needed here.
         public void ApplyAmbient(LightingSettings lighting)
         {
-            if (lighting == null) return;
+            if (lighting == null || GraphicsSettings.defaultRenderPipeline == null) return;
 
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
@@ -118,7 +118,7 @@ namespace Tools.Mesh2PNG
         // Rendering
 
         public void DrawInRect(Rect captureRect, int width, int height,
-            LightingSettings lighting, string selectedPath)
+            LightingSettings lighting, string selectedPath, bool showBounds = true)
         {
             if (captureRect.width < 1 || captureRect.height < 1) return;
 
@@ -131,7 +131,7 @@ namespace Tools.Mesh2PNG
             _utility.camera.clearFlags      = CameraClearFlags.SolidColor;
             ApplyAmbient(lighting);
             _utility.camera.Render();
-            DrawSelectionHighlight(selectedPath);
+            if (showBounds) DrawSelectionHighlight(selectedPath);
             _utility.EndAndDrawPreview(captureRect);
         }
 

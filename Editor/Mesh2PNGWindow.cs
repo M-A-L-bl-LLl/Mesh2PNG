@@ -29,6 +29,7 @@ namespace Tools.Mesh2PNG
         [SerializeField] private bool              _outputFoldout   = true;
         [SerializeField] private bool              _lightingFoldout = true;
         [SerializeField] private bool              _cameraFoldout   = true;
+        [SerializeField] private bool              _showBounds      = true;
 
         // Runtime state
 
@@ -260,6 +261,9 @@ namespace Tools.Mesh2PNG
                     Navigate(+1);
 
                 EditorGUI.EndDisabledGroup();
+
+                _showBounds = GUILayout.Toggle(
+                    _showBounds, "Bounds", EditorStyles.toolbarButton, GUILayout.Width(52));
             }
         }
 
@@ -281,7 +285,7 @@ namespace Tools.Mesh2PNG
             var childPath = SelectedEntry?.selectedChildPath;
             HandlePreviewInput(captureRect);
             _preview.UpdateCameraTransform(Cam, childPath);
-            _preview.DrawInRect(captureRect, _width, _height, Lighting, childPath);
+            _preview.DrawInRect(captureRect, _width, _height, Lighting, childPath, _showBounds);
 
             DrawCaptureOverlay(rect, captureRect);
 
