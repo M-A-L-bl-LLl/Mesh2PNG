@@ -1,0 +1,16 @@
+{
+  "name": "tools.mesh2png",
+  "version": "1.0.0",
+  "displayName": "Mesh2PNG",
+  "description": "Capture 3D meshes and GameObjects as transparent PNG images directly from the Unity Editor.",
+  "unity": "2021.3",
+  "keywords": [
+    "mesh",
+    "png",
+    "capture",
+    "screenshot",
+    "transparent",
+    "editor-tool"
+  ],
+  "dependencies": {}
+}

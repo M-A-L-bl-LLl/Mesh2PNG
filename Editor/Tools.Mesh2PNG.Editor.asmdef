@@ -1,0 +1,16 @@
+{
+  "name": "Tools.Mesh2PNG.Editor",
+  "rootNamespace": "Tools.Mesh2PNG",
+  "references": [],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
