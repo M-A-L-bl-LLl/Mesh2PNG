@@ -77,16 +77,55 @@ namespace Tools.Mesh2PNG
         {
             if (IsInstalling) return;
 
-            var root = PackageRootPath;
-            if (string.IsNullOrEmpty(root))
+            var info = GetPackageInfo();
+            if (info == null)
             {
-                UnityEngine.Debug.LogError("[Mesh2PNG] Could not resolve package path.");
+                UnityEngine.Debug.LogError("[Mesh2PNG] Could not find package info.");
                 return;
             }
 
             IsInstalling = true;
             RepaintOpenWindows();
 
+            // Git packages installed via UPM must be updated through Client.Add
+            if (info.source == UnityEditor.PackageManager.PackageSource.Git)
+            {
+                InstallViaUPM();
+            }
+            else
+            {
+                InstallViaGitPull(info.resolvedPath);
+            }
+        }
+
+        private static void InstallViaUPM()
+        {
+            const string gitUrl = "https://github.com/M-A-L-bl-LLl/Mesh2PNG.git";
+            var addRequest = UnityEditor.PackageManager.Client.Add(gitUrl);
+
+            EditorApplication.update += Poll;
+            void Poll()
+            {
+                if (!addRequest.IsCompleted) return;
+                EditorApplication.update -= Poll;
+                IsInstalling = false;
+
+                if (addRequest.Status == UnityEditor.PackageManager.StatusCode.Success)
+                {
+                    UnityEngine.Debug.Log("[Mesh2PNG] Updated successfully.");
+                    LatestVersion = null;
+                }
+                else
+                {
+                    UnityEngine.Debug.LogError($"[Mesh2PNG] Update failed: {addRequest.Error?.message}");
+                }
+
+                RepaintOpenWindows();
+            }
+        }
+
+        private static void InstallViaGitPull(string root)
+        {
             var startInfo = new ProcessStartInfo
             {
                 FileName               = "cmd.exe",
@@ -105,7 +144,6 @@ namespace Tools.Mesh2PNG
                 try
                 {
                     using var process = Process.Start(startInfo);
-                    // Read async to avoid deadlock when both buffers fill up
                     var outTask = System.Threading.Tasks.Task.Run(() => process.StandardOutput.ReadToEnd());
                     var errTask = System.Threading.Tasks.Task.Run(() => process.StandardError.ReadToEnd());
                     process.WaitForExit();
