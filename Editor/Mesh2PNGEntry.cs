@@ -24,6 +24,7 @@ namespace Tools.Mesh2PNG
         // SetCustomLighting ignores light.enabled, zeroing intensity is the workaround.
         public void ApplyTo(Light light)
         {
+            light.enabled   = enabled;
             light.color     = color;
             light.intensity = enabled ? intensity : 0f;
             light.transform.rotation = Quaternion.Euler(rotation.x, rotation.y, 0f);

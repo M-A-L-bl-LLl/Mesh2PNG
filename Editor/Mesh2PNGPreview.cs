@@ -112,6 +112,10 @@ namespace Tools.Mesh2PNG
 
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
+
+            // Built-in RP reads ambientColor from the utility directly
+            if (_utility != null)
+                _utility.ambientColor = lighting.ambient;
         }
 
         // Rendering
