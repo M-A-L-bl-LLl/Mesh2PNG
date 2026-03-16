@@ -15,8 +15,6 @@ namespace Tools.Mesh2PNG
 
         private PreviewRenderUtility _utility;
         private GameObject           _instance;
-        private Light                _light0;
-        private Light                _light1;
 
         private static Material _lineMaterial;
 
@@ -35,9 +33,6 @@ namespace Tools.Mesh2PNG
             _utility.camera.fieldOfView   = DefaultFov;
             _utility.camera.farClipPlane  = FarClip;
             _utility.camera.nearClipPlane = NearClip;
-
-            _light0 = CreatePreviewLight("PreviewLight0");
-            _light1 = CreatePreviewLight("PreviewLight1");
         }
 
         public void Dispose()
@@ -45,16 +40,6 @@ namespace Tools.Mesh2PNG
             DestroyInstance();
             _utility?.Cleanup();
             _utility = null;
-        }
-
-        private Light CreatePreviewLight(string name)
-        {
-            var go        = new GameObject(name) { hideFlags = HideFlags.HideAndDontSave };
-            var light     = go.AddComponent<Light>();
-            light.type    = LightType.Directional;
-            light.shadows = LightShadows.None;
-            _utility.AddSingleGO(go);
-            return light;
         }
 
         // Object
@@ -110,38 +95,24 @@ namespace Tools.Mesh2PNG
 
         // Lighting
 
-        // Call BEFORE BeginPreview — Built-in RP reads _utility.lights inside SetCustomLighting.
-        // Ambient is suppressed here (Color.black) so RenderSettings is the single source.
+        // Call BEFORE BeginPreview — Built-in reads _utility.lights via SetCustomLighting.
         public void ApplyLightingBuiltIn(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
-            if (GraphicsSettings.defaultRenderPipeline != null) return; // Built-in only
+            if (GraphicsSettings.defaultRenderPipeline != null) return;
 
-            _utility.ambientColor = Color.black; // suppress SetCustomLighting ambient to avoid doubling
+            _utility.ambientColor = Color.black; // ambient handled by RenderSettings after BeginPreview
             if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
             if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
         }
 
-        // Call AFTER BeginPreview — configures scene lights and ambient for both pipelines.
+        // Call AFTER BeginPreview — _utility.lights are scene objects readable by URP.
         public void ApplyLighting(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
 
-            bool isBuiltIn = GraphicsSettings.defaultRenderPipeline == null;
-
-            if (isBuiltIn)
-            {
-                // Built-in: disable AddSingleGO lights — SetCustomLighting handles directional lights
-                // Ambient comes solely from RenderSettings (ambientColor suppressed before BeginPreview)
-                if (_light0 != null) _light0.enabled = false;
-                if (_light1 != null) _light1.enabled = false;
-            }
-            else
-            {
-                // URP: use AddSingleGO scene lights
-                if (_light0 != null) lighting.light0.ApplyTo(_light0);
-                if (_light1 != null) lighting.light1.ApplyTo(_light1);
-            }
+            if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
+            if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
 
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
