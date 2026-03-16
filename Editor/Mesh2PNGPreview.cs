@@ -105,11 +105,10 @@ namespace Tools.Mesh2PNG
             if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
         }
 
-        // Call after BeginPreview. URP reads RenderSettings after SetOverrideLightingSettings runs.
-        // Built-in uses _utility.ambientColor set above, so nothing extra needed here.
+        // Call after BeginPreview. Sets ambient for both URP and Built-in RP.
         public void ApplyAmbient(LightingSettings lighting)
         {
-            if (lighting == null || GraphicsSettings.defaultRenderPipeline == null) return;
+            if (lighting == null) return;
 
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
