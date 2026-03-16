@@ -95,27 +95,18 @@ namespace Tools.Mesh2PNG
 
         // Lighting
 
-        // Call before BeginPreview. Configures lights and Built-in ambient.
-        public void ApplyLights(LightingSettings lighting)
+        // Call after BeginPreview, before camera.Render().
+        public void ApplyLighting(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
 
-            _utility.ambientColor = lighting.ambient; // Built-in reads this before BeginPreview
+            _utility.ambientColor = lighting.ambient;
+
             if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
             if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
-        }
-
-        // Call after BeginPreview. Sets ambient for both URP and Built-in RP.
-        public void ApplyAmbient(LightingSettings lighting)
-        {
-            if (lighting == null) return;
 
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
-
-            // Built-in RP reads ambientColor from the utility directly
-            if (_utility != null)
-                _utility.ambientColor = lighting.ambient;
         }
 
         // Rendering
@@ -127,12 +118,10 @@ namespace Tools.Mesh2PNG
 
             _utility.camera.aspect = (float)width / Mathf.Max(height, 1);
 
-            ApplyLights(lighting);
-
             _utility.BeginPreview(captureRect, GUIStyle.none);
             _utility.camera.backgroundColor = new Color(0.2f, 0.2f, 0.2f);
             _utility.camera.clearFlags      = CameraClearFlags.SolidColor;
-            ApplyAmbient(lighting);
+            ApplyLighting(lighting);
             _utility.camera.Render();
             if (showBounds) DrawSelectionHighlight(selectedPath);
             _utility.EndAndDrawPreview(captureRect);
@@ -173,9 +162,8 @@ namespace Tools.Mesh2PNG
             _utility.camera.clearFlags      = CameraClearFlags.SolidColor;
             _utility.camera.backgroundColor = background;
 
-            ApplyLights(lighting);
             _utility.BeginPreview(captureRect, GUIStyle.none);
-            ApplyAmbient(lighting);
+            ApplyLighting(lighting);
             _utility.camera.Render();
 
             // ReadPixels reads linear values but EndAndDrawPreview applies gamma on screen.
