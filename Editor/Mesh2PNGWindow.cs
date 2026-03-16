@@ -107,10 +107,62 @@ namespace Tools.Mesh2PNG
 
         private void OnGUI()
         {
+            DrawUpdateBanner();
             using (new EditorGUILayout.HorizontalScope())
             {
                 DrawLeftPanel();
                 DrawRightPanel();
+            }
+        }
+
+        private void DrawUpdateBanner()
+        {
+            if (Mesh2PNGUpdater.IsChecking)
+            {
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    GUILayout.Label("  Checking for updates…", EditorStyles.miniLabel,
+                        GUILayout.ExpandWidth(true));
+                }
+                EditorGUILayout.Space(2f);
+            }
+            else if (Mesh2PNGUpdater.UpdateAvailable)
+            {
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    GUILayout.Label(
+                        $"  Update available:  v{Mesh2PNGUpdater.CurrentVersion}  →  v{Mesh2PNGUpdater.LatestVersion}",
+                        EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+
+                    if (GUILayout.Button("Install", GUILayout.Width(60), GUILayout.Height(18)))
+                        Mesh2PNGUpdater.InstallLatest();
+                }
+                EditorGUILayout.Space(2f);
+            }
+            else if (!string.IsNullOrEmpty(Mesh2PNGUpdater.CheckError))
+            {
+                using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                {
+                    GUILayout.Label(
+                        $"  Update check failed: {Mesh2PNGUpdater.CheckError}",
+                        EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                }
+                EditorGUILayout.Space(2f);
+            }
+            else if (!string.IsNullOrEmpty(Mesh2PNGUpdater.LatestVersion))
+            {
+                var elapsed = (System.DateTime.UtcNow - Mesh2PNGUpdater.CheckCompletedAt).TotalSeconds;
+                if (elapsed < 5.0)
+                {
+                    using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
+                    {
+                        GUILayout.Label(
+                            $"  Mesh2PNG v{Mesh2PNGUpdater.CurrentVersion} — up to date ✓",
+                            EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                    }
+                    EditorGUILayout.Space(2f);
+                    Repaint();
+                }
             }
         }
 
@@ -264,6 +316,13 @@ namespace Tools.Mesh2PNG
 
                 _showBounds = GUILayout.Toggle(
                     _showBounds, "Bounds", EditorStyles.toolbarButton, GUILayout.Width(52));
+
+                EditorGUI.BeginDisabledGroup(Mesh2PNGUpdater.IsChecking);
+                var checkLabel = Mesh2PNGUpdater.IsChecking ? "…" : "↻";
+                if (GUILayout.Button(new GUIContent(checkLabel, "Check for updates"),
+                        EditorStyles.toolbarButton, GUILayout.Width(22)))
+                    Mesh2PNGUpdater.CheckForUpdates();
+                EditorGUI.EndDisabledGroup();
             }
         }
 
