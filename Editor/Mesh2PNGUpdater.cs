@@ -12,11 +12,14 @@ namespace Tools.Mesh2PNG
         private const string RemotePackageJsonUrl =
             "https://raw.githubusercontent.com/M-A-L-bl-LLl/Mesh2PNG/main/package.json";
 
-        private static readonly string LocalPackageJsonPath =
-            System.IO.Path.GetFullPath("Packages/Mesh2PNG/package.json");
+        private static UnityEditor.PackageManager.PackageInfo GetPackageInfo()
+        {
+            foreach (var p in UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages())
+                if (p.name == "com.mesh2png") return p;
+            return null;
+        }
 
-        private static readonly string PackageRootPath =
-            System.IO.Path.GetFullPath("Packages/Mesh2PNG");
+        private static string PackageRootPath => GetPackageInfo()?.resolvedPath;
 
         public static string   LatestVersion   { get; private set; }
         public static bool     IsChecking      { get; private set; }
@@ -27,8 +30,7 @@ namespace Tools.Mesh2PNG
         {
             get
             {
-                if (!System.IO.File.Exists(LocalPackageJsonPath)) return "0.0.0";
-                return ParseVersion(System.IO.File.ReadAllText(LocalPackageJsonPath)) ?? "0.0.0";
+                return GetPackageInfo()?.version ?? "0.0.0";
             }
         }
 
@@ -69,10 +71,17 @@ namespace Tools.Mesh2PNG
 
         public static void InstallLatest()
         {
+            var root = PackageRootPath;
+            if (string.IsNullOrEmpty(root))
+            {
+                UnityEngine.Debug.LogError("[Mesh2PNG] Could not resolve package path.");
+                return;
+            }
+
             var startInfo = new ProcessStartInfo
             {
                 FileName               = "git",
-                Arguments              = $"-C \"{PackageRootPath}\" pull",
+                Arguments              = $"-C \"{root}\" pull",
                 UseShellExecute        = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError  = true,

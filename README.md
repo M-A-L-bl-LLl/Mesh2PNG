@@ -41,7 +41,7 @@ https://github.com/M-A-L-bl-LLl/Mesh2PNG.git
 ```json
 {
   "dependencies": {
-    "tools.mesh2png": "file:tools.mesh2png"
+    "com.mesh2png": "file:com.mesh2png"
   }
 }
 ```
@@ -119,7 +119,7 @@ https://github.com/M-A-L-bl-LLl/Mesh2PNG.git
 ### ⚙️ Требования
 
 - Unity **2021.3** или новее
-- **URP** (Universal Render Pipeline) или Built-in RP
+- **Universal Render Pipeline (URP)** или Built-in RP
 
 ---
 
@@ -157,7 +157,7 @@ Copy the package folder into your project's `Packages/` directory and add an ent
 ```json
 {
   "dependencies": {
-    "tools.mesh2png": "file:tools.mesh2png"
+    "com.mesh2png": "file:com.mesh2png"
   }
 }
 ```
@@ -235,4 +235,4 @@ Each file is named after the GameObject and saved to the selected folder.
 ### ⚙️ Requirements
 
 - Unity **2021.3** or later
-- **URP** (Universal Render Pipeline) or Built-in RP
+- **Universal Render Pipeline (URP)** or Built-in RP
