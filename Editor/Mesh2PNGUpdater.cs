@@ -64,9 +64,15 @@ namespace Tools.Mesh2PNG
                 CheckCompletedAt = DateTime.UtcNow;
 
                 if (request.result == UnityWebRequest.Result.Success)
+                {
                     LatestVersion = ParseVersion(request.downloadHandler.text);
+                    UnityEngine.Debug.Log($"[Mesh2PNG] Check: remote={LatestVersion}, local={CurrentVersion}, updateAvailable={UpdateAvailable}");
+                }
                 else
+                {
                     CheckError = request.error;
+                    UnityEngine.Debug.LogWarning($"[Mesh2PNG] Check failed: {request.error}");
+                }
 
                 request.Dispose();
                 RepaintOpenWindows();
@@ -114,6 +120,7 @@ namespace Tools.Mesh2PNG
                 {
                     UnityEngine.Debug.Log("[Mesh2PNG] Updated successfully.");
                     LatestVersion = null;
+                    EditorApplication.delayCall += CheckForUpdates;
                 }
                 else
                 {
@@ -165,6 +172,7 @@ namespace Tools.Mesh2PNG
                         UnityEngine.Debug.Log($"[Mesh2PNG] Updated successfully.\n{output}");
                         LatestVersion = null;
                         AssetDatabase.Refresh();
+                        EditorApplication.delayCall += CheckForUpdates;
                     }
                     else
                     {
