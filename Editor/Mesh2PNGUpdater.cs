@@ -89,8 +89,8 @@ namespace Tools.Mesh2PNG
 
             var startInfo = new ProcessStartInfo
             {
-                FileName               = "git",
-                Arguments              = $"-C \"{root}\" pull",
+                FileName               = "cmd.exe",
+                Arguments              = $"/c git -C \"{root}\" pull",
                 UseShellExecute        = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError  = true,
@@ -105,9 +105,12 @@ namespace Tools.Mesh2PNG
                 try
                 {
                     using var process = Process.Start(startInfo);
-                    output   = process.StandardOutput.ReadToEnd();
-                    error    = process.StandardError.ReadToEnd();
+                    // Read async to avoid deadlock when both buffers fill up
+                    var outTask = System.Threading.Tasks.Task.Run(() => process.StandardOutput.ReadToEnd());
+                    var errTask = System.Threading.Tasks.Task.Run(() => process.StandardError.ReadToEnd());
                     process.WaitForExit();
+                    output   = outTask.Result;
+                    error    = errTask.Result;
                     exitCode = process.ExitCode;
                 }
                 catch (Exception e)

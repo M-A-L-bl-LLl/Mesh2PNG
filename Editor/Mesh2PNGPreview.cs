@@ -15,6 +15,8 @@ namespace Tools.Mesh2PNG
 
         private PreviewRenderUtility _utility;
         private GameObject           _instance;
+        private Light                _light0;
+        private Light                _light1;
 
         private static Material _lineMaterial;
 
@@ -33,6 +35,9 @@ namespace Tools.Mesh2PNG
             _utility.camera.fieldOfView   = DefaultFov;
             _utility.camera.farClipPlane  = FarClip;
             _utility.camera.nearClipPlane = NearClip;
+
+            _light0 = CreatePreviewLight("PreviewLight0");
+            _light1 = CreatePreviewLight("PreviewLight1");
         }
 
         public void Dispose()
@@ -40,6 +45,16 @@ namespace Tools.Mesh2PNG
             DestroyInstance();
             _utility?.Cleanup();
             _utility = null;
+        }
+
+        private Light CreatePreviewLight(string name)
+        {
+            var go        = new GameObject(name) { hideFlags = HideFlags.HideAndDontSave };
+            var light     = go.AddComponent<Light>();
+            light.type    = LightType.Directional;
+            light.shadows = LightShadows.None;
+            _utility.AddSingleGO(go);
+            return light;
         }
 
         // Object
@@ -100,11 +115,12 @@ namespace Tools.Mesh2PNG
         {
             if (lighting == null || _utility == null) return;
 
-            _utility.ambientColor = lighting.ambient;
+            // Own light GameObjects added via AddSingleGO work in both Built-in and URP
+            if (_light0 != null) lighting.light0.ApplyTo(_light0);
+            if (_light1 != null) lighting.light1.ApplyTo(_light1);
 
-            if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
-            if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
-
+            // Ambient
+            _utility.ambientColor       = lighting.ambient;
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
         }
