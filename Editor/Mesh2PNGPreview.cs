@@ -111,12 +111,13 @@ namespace Tools.Mesh2PNG
         // Lighting
 
         // Call BEFORE BeginPreview — Built-in RP reads _utility.lights inside SetCustomLighting.
+        // Ambient is suppressed here (Color.black) so RenderSettings is the single source.
         public void ApplyLightingBuiltIn(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
             if (GraphicsSettings.defaultRenderPipeline != null) return; // Built-in only
 
-            _utility.ambientColor = lighting.ambient;
+            _utility.ambientColor = Color.black; // suppress SetCustomLighting ambient to avoid doubling
             if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
             if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
         }
@@ -130,21 +131,20 @@ namespace Tools.Mesh2PNG
 
             if (isBuiltIn)
             {
-                // Built-in: disable AddSingleGO lights — SetCustomLighting handles everything
+                // Built-in: disable AddSingleGO lights — SetCustomLighting handles directional lights
+                // Ambient comes solely from RenderSettings (ambientColor suppressed before BeginPreview)
                 if (_light0 != null) _light0.enabled = false;
                 if (_light1 != null) _light1.enabled = false;
-                // Only update ambientColor — do NOT touch RenderSettings (would double the ambient)
-                _utility.ambientColor = lighting.ambient;
             }
             else
             {
-                // URP: use AddSingleGO scene lights + RenderSettings for ambient
+                // URP: use AddSingleGO scene lights
                 if (_light0 != null) lighting.light0.ApplyTo(_light0);
                 if (_light1 != null) lighting.light1.ApplyTo(_light1);
-                _utility.ambientColor       = lighting.ambient;
-                RenderSettings.ambientMode  = AmbientMode.Flat;
-                RenderSettings.ambientLight = lighting.ambient;
             }
+
+            RenderSettings.ambientMode  = AmbientMode.Flat;
+            RenderSettings.ambientLight = lighting.ambient;
         }
 
         // Rendering
