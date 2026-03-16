@@ -110,16 +110,29 @@ namespace Tools.Mesh2PNG
 
         // Lighting
 
-        // Call after BeginPreview, before camera.Render().
+        // Call BEFORE BeginPreview — Built-in RP reads _utility.lights inside SetCustomLighting.
+        public void ApplyLightingBuiltIn(LightingSettings lighting)
+        {
+            if (lighting == null || _utility == null) return;
+            if (GraphicsSettings.defaultRenderPipeline != null) return; // Built-in only
+
+            _utility.ambientColor = lighting.ambient;
+            if (_utility.lights.Length > 0) lighting.light0.ApplyTo(_utility.lights[0]);
+            if (_utility.lights.Length > 1) lighting.light1.ApplyTo(_utility.lights[1]);
+        }
+
+        // Call AFTER BeginPreview — configures scene lights and ambient for both pipelines.
         public void ApplyLighting(LightingSettings lighting)
         {
             if (lighting == null || _utility == null) return;
 
-            // Own light GameObjects added via AddSingleGO work in both Built-in and URP
-            if (_light0 != null) lighting.light0.ApplyTo(_light0);
-            if (_light1 != null) lighting.light1.ApplyTo(_light1);
+            bool isBuiltIn = GraphicsSettings.defaultRenderPipeline == null;
 
-            // Ambient
+            // Built-in: disable AddSingleGO lights (SetCustomLighting handles it)
+            // URP: configure AddSingleGO lights as real scene objects
+            if (_light0 != null) { if (isBuiltIn) _light0.enabled = false; else lighting.light0.ApplyTo(_light0); }
+            if (_light1 != null) { if (isBuiltIn) _light1.enabled = false; else lighting.light1.ApplyTo(_light1); }
+
             _utility.ambientColor       = lighting.ambient;
             RenderSettings.ambientMode  = AmbientMode.Flat;
             RenderSettings.ambientLight = lighting.ambient;
@@ -134,6 +147,7 @@ namespace Tools.Mesh2PNG
 
             _utility.camera.aspect = (float)width / Mathf.Max(height, 1);
 
+            ApplyLightingBuiltIn(lighting);
             _utility.BeginPreview(captureRect, GUIStyle.none);
             _utility.camera.backgroundColor = new Color(0.2f, 0.2f, 0.2f);
             _utility.camera.clearFlags      = CameraClearFlags.SolidColor;
@@ -178,6 +192,7 @@ namespace Tools.Mesh2PNG
             _utility.camera.clearFlags      = CameraClearFlags.SolidColor;
             _utility.camera.backgroundColor = background;
 
+            ApplyLightingBuiltIn(lighting);
             _utility.BeginPreview(captureRect, GUIStyle.none);
             ApplyLighting(lighting);
             _utility.camera.Render();
