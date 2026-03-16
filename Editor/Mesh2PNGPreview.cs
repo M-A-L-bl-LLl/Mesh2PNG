@@ -128,14 +128,23 @@ namespace Tools.Mesh2PNG
 
             bool isBuiltIn = GraphicsSettings.defaultRenderPipeline == null;
 
-            // Built-in: disable AddSingleGO lights (SetCustomLighting handles it)
-            // URP: configure AddSingleGO lights as real scene objects
-            if (_light0 != null) { if (isBuiltIn) _light0.enabled = false; else lighting.light0.ApplyTo(_light0); }
-            if (_light1 != null) { if (isBuiltIn) _light1.enabled = false; else lighting.light1.ApplyTo(_light1); }
-
-            _utility.ambientColor       = lighting.ambient;
-            RenderSettings.ambientMode  = AmbientMode.Flat;
-            RenderSettings.ambientLight = lighting.ambient;
+            if (isBuiltIn)
+            {
+                // Built-in: disable AddSingleGO lights — SetCustomLighting handles everything
+                if (_light0 != null) _light0.enabled = false;
+                if (_light1 != null) _light1.enabled = false;
+                // Only update ambientColor — do NOT touch RenderSettings (would double the ambient)
+                _utility.ambientColor = lighting.ambient;
+            }
+            else
+            {
+                // URP: use AddSingleGO scene lights + RenderSettings for ambient
+                if (_light0 != null) lighting.light0.ApplyTo(_light0);
+                if (_light1 != null) lighting.light1.ApplyTo(_light1);
+                _utility.ambientColor       = lighting.ambient;
+                RenderSettings.ambientMode  = AmbientMode.Flat;
+                RenderSettings.ambientLight = lighting.ambient;
+            }
         }
 
         // Rendering
