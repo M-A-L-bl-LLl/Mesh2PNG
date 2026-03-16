@@ -5,7 +5,7 @@ namespace Tools.Mesh2PNG
 {
     internal static class Mesh2PNGIcon
     {
-        private const string PackageIconPath = "Packages/tools.mesh2png/Editor/Icons/Mesh2PNG.png";
+        private const string PackageIconPath = "Packages/com.mesh2png/Editor/Icons/Mesh2PNG.png";
 
         private static Texture2D _cache;
 
