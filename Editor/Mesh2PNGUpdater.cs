@@ -52,7 +52,10 @@ namespace Tools.Mesh2PNG
 
             RepaintOpenWindows();
 
-            var request = UnityWebRequest.Get(RemotePackageJsonUrl);
+            var url     = RemotePackageJsonUrl + "?t=" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Cache-Control", "no-cache, no-store");
+            request.SetRequestHeader("Pragma", "no-cache");
             var op      = request.SendWebRequest();
             op.completed += _ =>
             {
