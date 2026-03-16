@@ -21,9 +21,10 @@ namespace Tools.Mesh2PNG
 
         private static string PackageRootPath => GetPackageInfo()?.resolvedPath;
 
-        public static string   LatestVersion   { get; private set; }
-        public static bool     IsChecking      { get; private set; }
-        public static string   CheckError      { get; private set; }
+        public static string   LatestVersion    { get; private set; }
+        public static bool     IsChecking       { get; private set; }
+        public static bool     IsInstalling     { get; private set; }
+        public static string   CheckError       { get; private set; }
         public static DateTime CheckCompletedAt { get; private set; }
 
         public static string CurrentVersion
@@ -74,12 +75,17 @@ namespace Tools.Mesh2PNG
 
         public static void InstallLatest()
         {
+            if (IsInstalling) return;
+
             var root = PackageRootPath;
             if (string.IsNullOrEmpty(root))
             {
                 UnityEngine.Debug.LogError("[Mesh2PNG] Could not resolve package path.");
                 return;
             }
+
+            IsInstalling = true;
+            RepaintOpenWindows();
 
             var startInfo = new ProcessStartInfo
             {
@@ -91,29 +97,42 @@ namespace Tools.Mesh2PNG
                 CreateNoWindow         = true
             };
 
-            try
+            System.Threading.Tasks.Task.Run(() =>
             {
-                using var process = Process.Start(startInfo);
-                process.WaitForExit();
+                string output = null, error = null;
+                int exitCode  = -1;
 
-                var output = process.StandardOutput.ReadToEnd();
-                var error  = process.StandardError.ReadToEnd();
+                try
+                {
+                    using var process = Process.Start(startInfo);
+                    output   = process.StandardOutput.ReadToEnd();
+                    error    = process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    exitCode = process.ExitCode;
+                }
+                catch (Exception e)
+                {
+                    error = e.Message;
+                }
 
-                if (process.ExitCode == 0)
+                EditorApplication.delayCall += () =>
                 {
-                    UnityEngine.Debug.Log($"[Mesh2PNG] Updated successfully.\n{output}");
-                    LatestVersion = null;
-                    AssetDatabase.Refresh();
-                }
-                else
-                {
-                    UnityEngine.Debug.LogError($"[Mesh2PNG] Update failed.\n{error}");
-                }
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.LogError($"[Mesh2PNG] Could not run git: {e.Message}");
-            }
+                    IsInstalling = false;
+
+                    if (exitCode == 0)
+                    {
+                        UnityEngine.Debug.Log($"[Mesh2PNG] Updated successfully.\n{output}");
+                        LatestVersion = null;
+                        AssetDatabase.Refresh();
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogError($"[Mesh2PNG] Update failed.\n{error}");
+                    }
+
+                    RepaintOpenWindows();
+                };
+            });
         }
 
         internal static void RepaintOpenWindows()

@@ -126,18 +126,24 @@ namespace Tools.Mesh2PNG
                 }
                 EditorGUILayout.Space(2f);
             }
-            else if (Mesh2PNGUpdater.UpdateAvailable)
+            else if (Mesh2PNGUpdater.UpdateAvailable || Mesh2PNGUpdater.IsInstalling)
             {
                 using (new EditorGUILayout.HorizontalScope(EditorStyles.helpBox))
                 {
-                    GUILayout.Label(
-                        $"  Update available:  v{Mesh2PNGUpdater.CurrentVersion}  →  v{Mesh2PNGUpdater.LatestVersion}",
-                        EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+                    var label = Mesh2PNGUpdater.IsInstalling
+                        ? $"  Installing update…"
+                        : $"  Update available:  v{Mesh2PNGUpdater.CurrentVersion}  →  v{Mesh2PNGUpdater.LatestVersion}";
 
+                    GUILayout.Label(label, EditorStyles.miniLabel, GUILayout.ExpandWidth(true));
+
+                    EditorGUI.BeginDisabledGroup(Mesh2PNGUpdater.IsInstalling);
                     if (GUILayout.Button("Install", GUILayout.Width(60), GUILayout.Height(18)))
                         Mesh2PNGUpdater.InstallLatest();
+                    EditorGUI.EndDisabledGroup();
                 }
                 EditorGUILayout.Space(2f);
+
+                if (Mesh2PNGUpdater.IsInstalling) Repaint();
             }
             else if (!string.IsNullOrEmpty(Mesh2PNGUpdater.CheckError))
             {
